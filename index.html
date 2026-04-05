@@ -327,9 +327,9 @@ function drawAlien(a) {
   // legs/tentacles (animated)
   ctx.strokeStyle = t.color;
   ctx.lineWidth = 2;
-  const legCount = t.legs === 3 ? 3 : 2;
+  const legCount = t.legs; // always 2 or 3 based on ALIEN_TYPES config
   for (let i = 0; i < legCount; i++) {
-    const lx = -8 + i * (16 / (legCount - 1 || 1));
+    const lx = -8 + i * (16 / (legCount - 1));
     const wiggle = frame === 0 ? 4 : -4;
     ctx.beginPath();
     ctx.moveTo(lx, 8);
@@ -352,7 +352,12 @@ function drawAlien(a) {
 
 function updateAliens(dt) {
   const alive = aliens.filter(a => a.alive);
-  if (!alive.length) { wave++; alienSpeed = Math.min(0.8 + wave * 0.3, 4); spawnAliens(); return; }
+  if (!alive.length) {
+    wave++;
+    alienSpeed = Math.min(0.8 + wave * 0.3, 4);
+    spawnAliens();
+    return;
+  }
 
   // animate
   alive.forEach(a => {
@@ -364,13 +369,19 @@ function updateAliens(dt) {
   const leftmost  = Math.min(...alive.map(a => a.x)) - ALIEN_W / 2;
   const rightmost = Math.max(...alive.map(a => a.x)) + ALIEN_W / 2;
 
-  if (rightmost >= W - 10) { alienDir = -1; aliens.forEach(a => { if (a.alive) a.y += 18; }); }
-  if (leftmost  <= 10)      { alienDir =  1; aliens.forEach(a => { if (a.alive) a.y += 18; }); }
+  if (rightmost >= W - 10) {
+    alienDir = -1;
+    aliens.forEach(a => { if (a.alive) a.y += ALIEN_DROP_DISTANCE; });
+  }
+  if (leftmost <= 10) {
+    alienDir = 1;
+    aliens.forEach(a => { if (a.alive) a.y += ALIEN_DROP_DISTANCE; });
+  }
 
   alive.forEach(a => a.x += alienDir * alienSpeed);
 
   // alien bombs
-  if (Math.random() < 0.004 * alive.length) {
+  if (Math.random() < ALIEN_BOMB_PROBABILITY * alive.length) {
     const shooter = alive[Math.floor(Math.random() * alive.length)];
     alienBombs.push({ x: shooter.x, y: shooter.y + 12 });
   }
@@ -378,6 +389,8 @@ function updateAliens(dt) {
 
 // ── Alien bombs ──────────────────────────────────────────────────────────────
 const BOMB_SPEED = 3;
+const ALIEN_DROP_DISTANCE = 18;   // pixels dropped when hitting a wall
+const ALIEN_BOMB_PROBABILITY = 0.004; // per-alien chance of firing each frame
 const alienBombs = [];
 
 function updateBombs() {
@@ -450,11 +463,16 @@ function drawHUD() {
   ctx.textAlign = 'right';
   ctx.fillText(`Wave: ${wave}`, W - 10, 24);
 
-  // lives as little birds
+  // lives as little birds (centered under score row)
+  const LIFE_ICON_SCALE = 0.4;
+  const LIFE_ICON_SPACING = 56; // px in scaled space
+  const scaleInverse = 1 / LIFE_ICON_SCALE;
+  const centerX = (W * scaleInverse) / 2;
+  const startX  = centerX - ((lives - 1) * LIFE_ICON_SPACING) / 2;
   for (let i = 0; i < lives; i++) {
     ctx.save();
-    ctx.scale(0.4, 0.4);
-    drawBird((W / 0.4) / 2 - (lives - 1) * 28 + i * 56 - W / 0.4 / 2 + W / 2 / 0.4, 50);
+    ctx.scale(LIFE_ICON_SCALE, LIFE_ICON_SCALE);
+    drawBird(startX + i * LIFE_ICON_SPACING, 50);
     ctx.restore();
   }
 }
