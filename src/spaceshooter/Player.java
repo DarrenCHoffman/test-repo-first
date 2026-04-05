@@ -2,7 +2,9 @@ package spaceshooter;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 
 /**
  * Represents the player's spaceship.
@@ -12,7 +14,7 @@ import java.awt.Rectangle;
 public class Player {
 
     public static final int WIDTH = 40;
-    public static final int HEIGHT = 24;
+    public static final int HEIGHT = 36;
 
     private int x;
     private int y;
@@ -42,21 +44,49 @@ public class Player {
         x = Math.max(0, Math.min(panelWidth - WIDTH, x));
     }
 
-    /** Draws the player ship on the provided {@link Graphics} context. */
+    /** Draws the player as a small yellow bird (Kiiroitori-style). */
     public void draw(Graphics g) {
-        // Ship body
-        g.setColor(new Color(0, 200, 100));
-        int[] xPoints = {x + WIDTH / 2, x + WIDTH, x};
-        int[] yPoints = {y, y + HEIGHT, y + HEIGHT};
-        g.fillPolygon(xPoints, yPoints, 3);
+        Graphics2D g2d = (Graphics2D) g;
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // Cockpit highlight
-        g.setColor(new Color(150, 255, 200));
-        g.fillOval(x + WIDTH / 2 - 5, y + 6, 10, 8);
+        Color yellow     = new Color(255, 215, 0);
+        Color deepYellow = new Color(230, 185, 0);
+        Color orange     = new Color(255, 140, 0);
 
-        // Engine glow
-        g.setColor(new Color(255, 180, 0));
-        g.fillRect(x + WIDTH / 4, y + HEIGHT - 4, WIDTH / 2, 4);
+        // Wings (slightly darker yellow, behind body)
+        g2d.setColor(deepYellow);
+        g2d.fillOval(x,      y + 14, 11, 18);  // left wing
+        g2d.fillOval(x + 29, y + 14, 11, 18);  // right wing
+
+        // Body
+        g2d.setColor(yellow);
+        g2d.fillOval(x + 7, y + 14, 26, 20);
+
+        // Head
+        g2d.fillOval(x + 11, y + 2, 18, 16);
+
+        // Tuft on top of head
+        g2d.fillOval(x + 18, y, 4, 5);
+
+        // Beak (orange triangle pointing upward)
+        g2d.setColor(orange);
+        int[] bx = {x + 20, x + 16, x + 24};
+        int[] by = {y + 2,  y + 8,  y + 8};
+        g2d.fillPolygon(bx, by, 3);
+
+        // Eyes
+        g2d.setColor(Color.BLACK);
+        g2d.fillOval(x + 15, y + 8, 3, 3);
+        g2d.fillOval(x + 22, y + 8, 3, 3);
+
+        // Legs
+        g2d.setColor(orange);
+        g2d.fillRect(x + 14, y + 32, 3, 3);  // left leg
+        g2d.fillRect(x + 23, y + 32, 3, 3);  // right leg
+
+        // Feet (toe stubs)
+        g2d.fillRect(x + 10, y + 34, 8, 2);  // left foot
+        g2d.fillRect(x + 21, y + 34, 8, 2);  // right foot
     }
 
     /**
